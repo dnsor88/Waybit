@@ -180,5 +180,5 @@ async function submitReport(){
   finally{if(!reportSaved){reportSubmitting=false;btn.disabled=false;btn.textContent=originalText}else{document.getElementById('reportAnotherBtn').hidden=false}}
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.autocomplete'))document.querySelectorAll('.suggestions').forEach(x=>x.classList.remove('open'))});sb.auth.onAuthStateChange(()=>refreshAuth());refreshAuth();loadDepots();
-</script><script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script><script defer src="/_vercel/insights/script.js"></script><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));}</script></body></html>
+</script><script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script><script defer src="/_vercel/insights/script.js"></script><script>if("serviceWorker" in navigator){window.addEventListener("load",async()=>{try{const reg=await navigator.serviceWorker.register("/sw.js",{updateViaCache:"none"});await reg.update()}catch(e){}});}</script></body></html>
 <!-- deploy test -->
