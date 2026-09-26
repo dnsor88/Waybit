@@ -107,6 +107,7 @@ async function submitReport(){
   if(!document.getElementById('depotLocation').value.trim()){r.innerHTML='<b>Could not save the visit.</b><br>Please enter a depot or location.';return}
   if(!arrival){r.innerHTML='<b>Could not save the visit.</b><br>Arrival time is required.';return}
   const btn=document.getElementById('submitReportBtn'),originalText=btn.textContent;
+  let reportSaved=false;
   reportSubmitting=true;btn.disabled=true;btn.textContent='Submitting...';
   try{
     const depot_id=await resolveDepot();
@@ -114,10 +115,11 @@ async function submitReport(){
     if(dep&&new Date(dep)<new Date(arr)){let x=new Date(dep);x.setDate(x.getDate()+1);dep=x.toISOString()}
     const {error}=await sb.from('visits').insert({user_id:currentUser.id,depot_id,visit_type:document.getElementById('visitType').value,booked_at:booked?localDateTime(booked):null,arrived_at:arr,departed_at:dep,note:document.getElementById('note').value.trim()||null});
     if(error)throw error;
+    reportSaved=true;btn.textContent='✓ Report submitted';
     let total='';if(departure){let a=mins(arrival),d=mins(departure);if(d<a)d+=1440;total='<br>Total time on site: '+formatMinutes(d-a)+'.'}
     r.innerHTML='<b>✓ Visit saved to WAYBIT.</b>'+total+' Thanks for helping the next driver.';document.getElementById('depotLocation').dataset.depotId='';await loadDepots()
   }catch(e){r.innerHTML='<b>Could not save the visit.</b><br>'+esc(e.message||String(e))}
-  finally{reportSubmitting=false;btn.disabled=false;btn.textContent=originalText}
+  finally{if(!reportSaved){reportSubmitting=false;btn.disabled=false;btn.textContent=originalText}}
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.autocomplete'))document.querySelectorAll('.suggestions').forEach(x=>x.classList.remove('open'))});sb.auth.onAuthStateChange(()=>refreshAuth());refreshAuth();loadDepots();
 </script></body></html>
