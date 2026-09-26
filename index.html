@@ -66,6 +66,12 @@ function depotMatches(place,q){
 function relevantPlaces(places,q){
   return places.filter(p=>!/amazon locker|amazon hub locker/i.test(p.name||'')&&depotMatches(p,q));
 }
+async function googleDepotSearch(q){
+  try{
+    const places=await placesFetch({mode:'google',q});
+    return (places||[]).filter(p=>!/amazon locker|amazon hub locker/i.test(p.name||''));
+  }catch(e){return []}
+}
 function catalogMatches(q){return q.trim().length<3?[]:depotCatalog.filter(p=>depotMatches(p,q))}
 function suggestionStatus(id,message){
   const box=document.getElementById(id);
@@ -87,7 +93,7 @@ function filterDepots(){
   renderDepots(rows);mergeAutocompleteSuggestions('searchSuggestions',rows,catalogMatches(q),false,true);clearTimeout(searchTimer);
   if(q.length<3)return;
   suggestionStatus('searchSuggestions','Searching more depots…');
-  searchTimer=setTimeout(async()=>{try{const places=await placesFetch({mode:'autocomplete',q});if(seq!==searchRequestSeq||input.value.trim()!==q)return;const local=matchingDepots(q),combined=[...catalogMatches(q),...relevantPlaces(places,q)];mergeAutocompleteSuggestions('searchSuggestions',local,combined,false,true);if(!local.length&&!combined.length)suggestionStatus('searchSuggestions','No match yet. Try the postcode or company and town.')}catch(e){if(seq===searchRequestSeq&&input.value.trim()===q)suggestionStatus('searchSuggestions','More results are unavailable. Try again in a moment.')}},400)
+  searchTimer=setTimeout(async()=>{try{const places=await placesFetch({mode:'autocomplete',q});if(seq!==searchRequestSeq||input.value.trim()!==q)return;const local=matchingDepots(q);let combined=[...catalogMatches(q),...relevantPlaces(places,q)];if(!local.length&&!combined.length){suggestionStatus('searchSuggestions','Checking Google for more depots…');combined=[...combined,...await googleDepotSearch(q)]}mergeAutocompleteSuggestions('searchSuggestions',local,combined,false,true);if(!local.length&&!combined.length)suggestionStatus('searchSuggestions','No match yet. Try the postcode or company and town.')}catch(e){if(seq===searchRequestSeq&&input.value.trim()===q)suggestionStatus('searchSuggestions','More results are unavailable. Try again in a moment.')}},400)
 }
 function renderSuggestions(id,rows,openDetail=false){const box=document.getElementById(id);if(!box)return;box.innerHTML=rows.map(d=>`<div class="suggestion" onclick="${openDetail?`openDepotDetail('${d.depot_id}')`:`chooseDepot('${d.depot_id}')`}"><b>${esc(d.name)}</b><small>${esc([d.address,d.postcode].filter(Boolean).join(' · ')||'UK')} · ${d.completed_reports||0} reports</small></div>`).join('');box.classList.toggle('open',rows.length>0)}
 function reportAutocomplete(){
@@ -96,7 +102,7 @@ function reportAutocomplete(){
   mergeAutocompleteSuggestions('reportSuggestions',local,catalogMatches(q),true,false);clearTimeout(placeTimer);
   if(q.length<3)return;
   suggestionStatus('reportSuggestions','Searching more depots…');
-  placeTimer=setTimeout(async()=>{try{const places=await placesFetch({mode:'autocomplete',q});if(seq!==reportRequestSeq||i.value.trim()!==q)return;const local=matchingDepots(q),combined=[...catalogMatches(q),...relevantPlaces(places,q)];mergeAutocompleteSuggestions('reportSuggestions',local,combined,true,false);if(!local.length&&!combined.length)suggestionStatus('reportSuggestions','No match yet. Try the postcode or company and town.')}catch(e){if(seq===reportRequestSeq&&i.value.trim()===q)suggestionStatus('reportSuggestions','More results are unavailable. Try again in a moment.')}},400)
+  placeTimer=setTimeout(async()=>{try{const places=await placesFetch({mode:'autocomplete',q});if(seq!==reportRequestSeq||i.value.trim()!==q)return;const local=matchingDepots(q);let combined=[...catalogMatches(q),...relevantPlaces(places,q)];if(!local.length&&!combined.length){suggestionStatus('reportSuggestions','Checking Google for more depots…');combined=[...combined,...await googleDepotSearch(q)]}mergeAutocompleteSuggestions('reportSuggestions',local,combined,true,false);if(!local.length&&!combined.length)suggestionStatus('reportSuggestions','No match yet. Try the postcode or company and town.')}catch(e){if(seq===reportRequestSeq&&i.value.trim()===q)suggestionStatus('reportSuggestions','More results are unavailable. Try again in a moment.')}},400)
 }
 function useManualDepot(){
  const name=document.getElementById('manualDepotName').value.trim(),
