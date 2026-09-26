@@ -81,7 +81,28 @@ Deno.serve(async (req: Request) => {
         }
       } catch { /* Preserve autocomplete results when the secondary search fails. */ }
     }
-    return json({results:results.slice(0,mode === "nearby" ? 15 : 12)});
+    if (mode !== "nearby") {
+      const query=(u.searchParams.get("q") || "").trim();
+      // Search business/industrial POIs across the UK, not just geocoded addresses.
+      if (/[a-z]{3}/i.test(query)) {
+        const business = new URL("https://api.geoapify.com/v2/places");
+        business.searchParams.set("categories","commercial,production,office,building.commercial,building.industrial");
+        business.searchParams.set("filter","rect:-8.65,49.8,1.8,60.9");
+        business.searchParams.set("name",query);
+        business.searchParams.set("limit","20");
+        business.searchParams.set("apiKey",key);
+        try {
+          const response=await fetch(business,{signal:AbortSignal.timeout(5000)});
+          if(response.ok){
+            const payload=await response.json();
+            const businesses=(payload.features || []).map((f:any)=>f.properties).filter((p:any)=>p.country_code==="gb").map((p:any)=>({name:p.name || p.address_line1,address:p.formatted || p.address_line2 || "",postcode:p.postcode || "",lat:p.lat,lon:p.lon,source:"geoapify"}));
+            const seen=new Set();
+            results=[...businesses,...results].filter(p=>{const id=[p.name,p.postcode,p.lat,p.lon].join("|");if(seen.has(id))return false;seen.add(id);return true;});
+          }
+        }catch { /* Keep available geocoding results if POI search times out. */ }
+      }
+    }
+    return json({results:results.slice(0,mode === "nearby" ? 15 : 20)});
   } catch (e) {
     return json({error: e instanceof Error ? e.message : "Unknown error"}, 500);
   }
