@@ -79,8 +79,8 @@ let searchRequestSeq=0, reportRequestSeq=0, searchTimer=null;
 function mergeAutocompleteSuggestions(id,local,places,forReport=false,openDetail=false){
   const box=document.getElementById(id);if(!box)return;
   const localKeys=new Set(local.map(d=>`${(d.name||'').toLowerCase()}|${(d.postcode||'').toLowerCase()}`));
-  const localHtml=local.map(d=>`<div class="suggestion" onpointerdown="event.preventDefault();${openDetail?`openDepotDetail('${d.depot_id}')`:`chooseDepot('${d.depot_id}')`}"><b>${esc(d.name)}</b><small>${esc([d.address,d.postcode].filter(Boolean).join(' · ')||'UK')} · ${d.completed_reports||0} reports</small></div>`).join('');
-  const extHtml=(places||[]).filter(p=>{const key=`${(p.name||'').toLowerCase()}|${(p.postcode||'').toLowerCase()}`;if(localKeys.has(key))return false;localKeys.add(key);return true}).map(p=>{const k=placeKey(p);externalPlaces[k]=p;return `<div class="suggestion" onpointerdown="event.preventDefault();chooseExternalPlace('${k}',${forReport?'true':'false'})"><b>${esc(p.name||'Location')}</b><small>${esc(p.address||p.postcode||'United Kingdom')}</small></div>`}).join('');
+  const localHtml=local.map(d=>`<div class="suggestion" onclick="${openDetail?`openDepotDetail('${d.depot_id}')`:`chooseDepot('${d.depot_id}')`}"><b>${esc(d.name)}</b><small>${esc([d.address,d.postcode].filter(Boolean).join(' · ')||'UK')} · ${d.completed_reports||0} reports</small></div>`).join('');
+  const extHtml=(places||[]).filter(p=>{const key=`${(p.name||'').toLowerCase()}|${(p.postcode||'').toLowerCase()}`;if(localKeys.has(key))return false;localKeys.add(key);return true}).map(p=>{const k=placeKey(p);externalPlaces[k]=p;return `<div class="suggestion" onclick="chooseExternalPlace('${k}',${forReport?'true':'false'})"><b>${esc(p.name||'Location')}</b><small>${esc(p.address||p.postcode||'United Kingdom')}</small></div>`}).join('');
   box.innerHTML=localHtml+extHtml;box.classList.toggle('open',!!(localHtml||extHtml));
 }
 function filterDepots(){
