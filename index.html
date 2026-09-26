@@ -64,8 +64,7 @@ function depotMatches(place,q){
   return q.toLowerCase().trim().split(/\s+/).every(word=>haystack.includes(depotSearchText(word)));
 }
 function relevantPlaces(places,q){
-  const code=q.match(/\b[a-z]{3}\s*\d{1,2}\b/i);
-  return places.filter(p=>!/amazon locker|amazon hub locker/i.test(p.name||'')&&(!code||depotSearchText([p.name,p.address].join(' ')).includes(depotSearchText(code[0]))));
+  return places.filter(p=>!/amazon locker|amazon hub locker/i.test(p.name||'')&&depotMatches(p,q));
 }
 function catalogMatches(q){return q.trim().length<3?[]:depotCatalog.filter(p=>depotMatches(p,q))}
 function suggestionStatus(id,message){
