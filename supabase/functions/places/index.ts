@@ -61,7 +61,9 @@ Deno.serve(async (req: Request) => {
         lat:p.lat, lon:p.lon, source:"geoapify"
       }));
     }
-    if (mode !== "nearby" && results.length < 3) {
+    const code=(u.searchParams.get("q") || "").match(/\b[a-z]{3}\s*\d{1,2}\b/i);
+    const hasCodeMatch=!code || results.some(p=>[p.name,p.address].join(" ").replace(/[^a-z0-9]/ig,"").toLowerCase().includes(code[0].replace(/\s/g,"").toLowerCase()));
+    if (mode !== "nearby" && (results.length < 3 || !hasCodeMatch)) {
       // Full name search complements prefix-oriented address autocomplete.
       const fallback = new URL(target);
       fallback.pathname = "/v1/geocode/search";
