@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
           for (const p of found.results || []) {
             const place = {name:p.name || p.address_line1 || p.formatted,address:p.formatted || "",postcode:p.postcode || "",lat:p.lat,lon:p.lon,source:"geoapify"};
             const id = [place.name,place.postcode,place.lat,place.lon].join("|");
-            if (!seen.has(id)) { results.push(place); seen.add(id); }
+            if (!seen.has(id)) { results.unshift(place); seen.add(id); }
           }
         }
       } catch { /* Preserve autocomplete results when the secondary search fails. */ }
