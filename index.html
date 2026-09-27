@@ -158,7 +158,6 @@ function reportAnotherVisit(){
 async function submitReport(){
   if(reportSubmitting)return;
   const r=document.getElementById('result');r.style.display='block';
-  if(!currentUser){r.innerHTML='<b>Sign in required.</b><br>Create a driver account or sign in before submitting.';openAuth();return}
   const arrival=document.getElementById('arrival').value,departure=document.getElementById('departure').value,booked=document.getElementById('booked').value;
   if(!document.getElementById('depotLocation').value.trim()){r.innerHTML='<b>Could not save the visit.</b><br>Please enter a depot or location.';return}
   if(!arrival){r.innerHTML='<b>Could not save the visit.</b><br>Arrival time is required.';return}
@@ -169,11 +168,11 @@ async function submitReport(){
     const depot_id=await resolveDepot();
     let arr=localDateTime(arrival),dep=departure?localDateTime(departure):null;
     if(dep&&new Date(dep)<new Date(arr)){let x=new Date(dep);x.setDate(x.getDate()+1);dep=x.toISOString()}
-    const {error}=await sb.from('visits').insert({user_id:currentUser.id,depot_id,visit_type:document.getElementById('visitType').value,booked_at:booked?localDateTime(booked):null,arrived_at:arr,departed_at:dep,note:document.getElementById('note').value.trim()||null});
+    const {error}=await sb.from('visits').insert({user_id:currentUser?currentUser.id:null,depot_id,visit_type:document.getElementById('visitType').value,booked_at:booked?localDateTime(booked):null,arrived_at:arr,departed_at:dep,note:document.getElementById('note').value.trim()||null});
     if(error)throw error;
     reportSaved=true;btn.textContent='✓ Report submitted';
     let total='';if(departure){let a=mins(arrival),d=mins(departure);if(d<a)d+=1440;total='<br>Total time on site: '+formatMinutes(d-a)+'.'}
-    r.innerHTML='<b>✓ Visit saved to WAYBIT.</b>'+total+' Thanks for helping the next driver.';document.getElementById('depotLocation').dataset.depotId='';await loadDepots()
+    r.innerHTML='<b>✓ Visit saved to WAYBIT.</b>'+total+' Thanks for helping the next driver.'+(currentUser?'':'<br><span class="muted">Want to keep your visit history later? <button class="btn ghost" type="button" style="margin-top:10px" onclick="openAuth()">Create a free account</button></span>');document.getElementById('depotLocation').dataset.depotId='';await loadDepots()
   }catch(e){r.innerHTML='<b>Could not save the visit.</b><br>'+esc(e.message||String(e))}
   finally{if(!reportSaved){reportSubmitting=false;btn.disabled=false;btn.textContent=originalText}else{document.getElementById('reportAnotherBtn').hidden=false}}
 }
